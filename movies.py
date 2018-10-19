@@ -16,9 +16,10 @@ else:
     g = df
 
 
-#if df.shape[0] > 0
-
-
-result = g.sort_values(["Rating"], ascending = False)
+if g.shape[0] > 0:
+    result = g.sort_values(["Rating"], ascending = False)
+    print(g.head(3).sample(1))
+else:
+    print("No result")
 #(result.head(3).sample(1))
 print(result.head(3).sample(1))
