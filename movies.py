@@ -29,5 +29,5 @@ if g.shape[0] > 0:
     #(result.head(3).sample(1))
     print(result.head(3).sample(1))
 else:
-    print("Sorry, no results!")
+    print("Sorry, no results! No movies in the {} genre.".format(genre))
 
