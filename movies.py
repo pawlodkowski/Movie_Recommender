@@ -7,6 +7,8 @@ def get_data():
     df = pd.read_excel(PATH)
     return df
 
+df = get_data()
+
 print("Welcome to the best movie recommender on this planet.")
 
 genre = input("enter a genre (or leave it blank): ")
