@@ -4,7 +4,7 @@ PATH = "reviews.xlsx"
 df = pd.read_excel(PATH)
 
 
-print("some words")
+print("Welcome to the best movie recommender on this planet.")
 
 genre = input("enter a genre: ")
 reviewer = input("your favourite reviewer: ")
