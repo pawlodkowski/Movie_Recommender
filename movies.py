@@ -6,8 +6,8 @@ df = pd.read_excel(PATH)
 
 print("some words")
 
-genre = input("enter a genre: ")
-reviewer = input("your favourite reviewer: ")
+genre = input("enter a genre (or leave it blank): ")
+#reviewer = input("your favourite reviewer: ")
 
 
 if genre:
@@ -16,9 +16,9 @@ else:
     g = df
 
 
-#if df.shape[0] > 0
-
-
-result = g.sort_values(["Rating"], ascending = False)
-#(result.head(3).sample(1))
-print(result.head(3).sample(1))
+if g.shape[0] > 0:
+    result = g.sort_values(["Rating"], ascending = False)
+    #(result.head(3).sample(1))
+    print(result.head(3).sample(1))
+else:
+    print("Sorry, no results!")
