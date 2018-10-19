@@ -3,6 +3,8 @@ import pandas as pd
 
 def get_data():
     # function that returns a dataframe containing movie recommendations
+    # Output is going to be a dataframe with 4 columns:  
+    #      Name (str), Genre (str), Rating (float), Reviewer (str)
     PATH = "reviews.xlsx"
     df = pd.read_excel(PATH)
     return df
