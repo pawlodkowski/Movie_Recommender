@@ -1,8 +1,11 @@
 # Imports
 import pandas as pd
-PATH = "reviews.xlsx"
-df = pd.read_excel(PATH)
 
+def get_data():
+    # function that returns a dataframe containing movie recommendations
+    PATH = "reviews.xlsx"
+    df = pd.read_excel(PATH)
+    return df
 
 print("Welcome to the best movie recommender on this planet.")
 
