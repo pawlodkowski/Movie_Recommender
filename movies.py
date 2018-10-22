@@ -10,6 +10,7 @@ def get_data():
 
 df = get_data()
 
+
 #GUI
 wd = tkt.Tk()
 wd.title("Movie Recommender") #window header
@@ -50,27 +51,30 @@ tkt.Radiobutton(wd, text = ">3.5h", variable = dur, value = 6).place(x=150,y=140
 
 #Buttons
 #B = tkt.Button(wd, bg='pink', activebackground="green", text = "calculate", command = getE).place(x = 60,y = 80)
-cls = tkt.Button(wd, bg='green', text = "Exit", command = closew).place(x = 300,y = 60)
+tkt.Button(wd, bg='green', text = "Exit", command = closew).place(x = 300,y = 60)
 
-wd.mainloop() #'infinite loop' that runs until main window is destroyed
+def GUI():
+    return wd.mainloop() 
 
-#print("Welcome to the best movie recommender on this planet.")
+#GUI()
 
-#genre = input("enter a genre (or leave it blank): ")
-#reviewer = input("your favourite reviewer: ")
+def noGUI():
+    print("Welcome to the best movie recommender on this planet.")
 
-
-#if genre:
-#    g = df[df["Genre"] == genre]
-#else:
-#    g = df
+    genre = input("enter a genre (or leave it blank): ")
+    #reviewer = input("your favourite reviewer: ")
 
 
-#if g.shape[0] > 0:
-#    result = g.sort_values(["Metascore"], ascending = False)
+    if genre:
+        g = df[df["Genre"] == genre]
+    else:
+        g = df
 
-    #(result.head(3).sample(1))
-#    print(result.head(3).sample(1))
-#else:
-#    print("Sorry, no results! No movies in the {} genre.".format(genre))
 
+    if g.shape[0] > 0:
+        result = g.sort_values(["Metascore"], ascending = False)
+        print(result.head(3).sample(1))
+    else:
+        print("Sorry, no results! No movies in the {} genre.".format(genre))
+
+noGUI()
