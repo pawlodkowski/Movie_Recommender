@@ -2,8 +2,11 @@
 import pandas as pd
 import tkinter as tkt
 
-def get_data():
+def get_data(para):
+    # todo: database connection goes here
+    # todo: add further parameters for data selection/slicing 
     # function that returns a dataframe of movies
+
     PATH = "data/OMDB.csv"
     df = pd.read_csv(PATH)
     return df
