@@ -1,34 +1,15 @@
-"""Load all data from the Spreadsheet into a database
-
-- write a separate script for loading the data
-- use sqlite3, see: https://github.com/krother/Python3_Package_Examples/
-- try loading the data into a DataFrame """
-
-
-# create database connection
-# function that creates table
-### 
-'''
-ImdbId (string, varchar)
-Title (string)
-Release year (integer)
-pg-rating (string)
-runtime (integer)
-genre (string) 
-keywords (artist, director, writer, plot, language)
-imdbrating (float)
-weighted rating?
-'''
-# function that populates table with data from .csv
-
 
 import pandas as pd
 import sqlite3
 
+
+# reading csv for now... will be replaced by smart delta-handling API connection!
 PATH = "data/OMDB.csv"
 df = pd.read_csv(PATH)
 
+# establish connection to database
 db = sqlite3.connect('data/movies.db')
+
 
 def create_db():
     DB_SETUP = """
@@ -48,11 +29,12 @@ def create_db():
     """
     db.executescript(DB_SETUP)
 
+
 def drop_table(tablename):
     DROP_TABLE = f"DROP TABLE {tablename};"
     db.executescript(DROP_TABLE)
     #db.close()
-    
+       
     
 def insert_data():
     for i, row in df.iterrows():
@@ -68,18 +50,17 @@ def insert_data():
                            row["imdbVotes"], 
                            0.0)) # wrating needs numerical values for calculation, imdbVotes is still string
 
-create_db()
+
+
+########## select what should be done
+#create_db()
 #drop_table("movies")
-insert_data()
-
-
-
-result = db.execute("SELECT title FROM movies")
-#print(list(result))
+#insert_data() 
 
 
 query = "SELECT keywords, wrating FROM movies"
 df_out = pd.read_sql(query, db)
 print(df_out.head(1))
 
+#db.commit()
 db.close()
