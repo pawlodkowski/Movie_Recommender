@@ -80,12 +80,17 @@ def create_table_tags():
     db.executescript(DB_SETUP) 
 
 
-def create_db():
-    create_table_omdb()
-    create_table_movielens()
-    create_table_ratings()
-    create_table_links()
-    create_table_tags()
+def create_tables(tablenames):
+    if "omdb" in tablenames:
+        create_table_omdb()
+    elif "movielens" in tablenames:
+        create_table_movielens()
+    elif "ratings" in tablenames:
+        create_table_ratings()
+    elif "links" in tablenames:  
+        create_table_links()
+    elif "tags" in tablenames: 
+        create_table_tags()
 
 
 def drop_table(tablenames):
@@ -108,60 +113,63 @@ df_tags = pd.read_csv("data/tags.csv")
 
 ############################################################################### Insert Data
 
-def insert_data():
-    for i, row in df_omdb.iterrows():
-        query = 'INSERT INTO omdb VALUES (?,?,?,?,?,?,?,?,?,?)'
-        db.execute(query, (row['imdbID'], 
-                           row["Title"], 
-                           row["Year"], 
-                           row["Rated"], 
-                           row["Runtime"], 
-                           row["Genre"], 
-                           row["Director"] + " " + row["Actors"] + " " + row["Plot"] + " " + row["Language"], 
-                           row["imdbRating"], 
-                           row["imdbVotes"], 
-                           0.0)) # wrating needs numerical values for calculation, imdbVotes is still string
-       
-    for i, row in df_movielens.iterrows():
-        query = 'INSERT INTO movielens VALUES (?,?,?)'
-        db.execute(query, (row['movieId'], 
-                           row["title"], 
-                           row["genres"]
-                           ))
+def insert_data(tablenames):
+    if "omdb" in tablenames:
+        for i, row in df_omdb.iterrows():
+            query = 'INSERT INTO omdb VALUES (?,?,?,?,?,?,?,?,?,?)'
+            db.execute(query, (row['imdbID'], 
+                               row["Title"], 
+                               row["Year"], 
+                               row["Rated"], 
+                               row["Runtime"], 
+                               row["Genre"], 
+                               row["Director"] + " " + row["Actors"] + " " + row["Plot"] + " " + row["Language"], 
+                               row["imdbRating"], 
+                               row["imdbVotes"], 
+                               0.0)) # wrating needs numerical values for calculation, imdbVotes is still string
+ 
+    elif "movielens" in tablenames: 
+        for i, row in df_movielens.iterrows():
+            query = 'INSERT INTO movielens VALUES (?,?,?)'
+            db.execute(query, (row['movieId'], 
+                               row["title"], 
+                               row["genres"]
+                               ))
 
-    for i, row in df_links.iterrows():
-        query = 'INSERT INTO links VALUES (?,?,?)'
-        db.execute(query, (row["movieId"], 
-                           row["imdbId"], 
-                           row["tmdbId"]
-                           ))
+    elif "links" in tablenames: 
+        for i, row in df_links.iterrows():
+            query = 'INSERT INTO links VALUES (?,?,?)'
+            db.execute(query, (row["movieId"], 
+                               row["imdbId"], 
+                               row["tmdbId"]
+                               ))
 
-    for i, row in df_ratings.iterrows():
-        query = 'INSERT INTO ratings VALUES (?,?,?,?)'
-        db.execute(query, (row['userId'], 
-                           row["movieId"], 
-                           row["rating"],
-                           row["timestamp"]                           
-                           ))
-        
-    for i, row in df_tags.iterrows():
-        query = 'INSERT INTO tags VALUES (?,?,?,?)'
-        db.execute(query, (row['userId'], 
-                           row["movieId"], 
-                           row["tag"],
-                           row["timestamp"]                           
-                           ))
+    elif "ratings" in tablenames: 
+        for i, row in df_ratings.iterrows():
+            query = 'INSERT INTO ratings VALUES (?,?,?,?)'
+            db.execute(query, (row['userId'], 
+                               row["movieId"], 
+                               row["rating"],
+                               row["timestamp"]                           
+                               ))
+
+    elif "tags" in tablenames:  
+        for i, row in df_tags.iterrows():
+            query = 'INSERT INTO tags VALUES (?,?,?,?)'
+            db.execute(query, (row['userId'], 
+                               row["movieId"], 
+                               row["tag"],
+                               row["timestamp"]                           
+                               ))
 
 
 ############################################################################### select what to do
 
-
-#create_db()
-        
-tablenames = ["ombd", "movielens", "tags", "links", "ratings"]        
+tablenames = ["ombd", "movielens", "tags", "links", "ratings"] 
+#create_tables(tablenames)
 #drop_table(tablenames)
 
-#insert_data() 
+#insert_data(tablenames) 
 
 
 query = '''SELECT * FROM movielens'''
