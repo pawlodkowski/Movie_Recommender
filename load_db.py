@@ -1,6 +1,7 @@
 
 import pandas as pd
 import sqlite3
+import re
 
 
 # reading csv for now... will be replaced by smart delta-handling API connection!
@@ -38,7 +39,8 @@ def create_table_movielens():
     CREATE TABLE IF NOT EXISTS movielens (
         movieId STRING(15),
         title VARCHAR(250),
-        genres TEXT
+        genres TEXT,
+        year INTEGER
     );
     CREATE UNIQUE INDEX IF NOT EXISTS i1 ON movielens(movieId);"""
     db.executescript(DB_SETUP)
@@ -50,7 +52,7 @@ def create_table_ratings():
         userId STRING(15),
         movieId STRING(15),
         rating FLOAT,
-        timestamp STRING(20)
+        timestamp TEXT
     );
     CREATE UNIQUE INDEX IF NOT EXISTS i1 ON ratings(movieId); """  
     db.executescript(DB_SETUP)
@@ -73,7 +75,7 @@ def create_table_tags():
         userId STRING(15),
         movieId STRING(15),
         tag TEXT,
-        timestamp STRING(20)
+        timestamp TEXT
     );
     CREATE UNIQUE INDEX IF NOT EXISTS i1 ON tags(movieId);  """
     db.executescript(DB_SETUP) 
@@ -109,6 +111,21 @@ df_tags = pd.read_csv("data/tags.csv")
 
 # Reshape Data
 
+def get_year(x):
+    y = re.findall("\(([0-9]{4})\)", x)
+    try:
+        y = y[0]
+    except:
+        y = 0
+    return y
+
+df_movielens["year"] = df_movielens["title"].apply(get_year)
+df_ratings["timestamp"] = pd.to_datetime(df_ratings["timestamp"], unit='s')
+df_ratings["timestamp"] = df_ratings["timestamp"].astype(str)
+df_tags["timestamp"] = pd.to_datetime(df_tags["timestamp"], unit='s')
+df_tags["timestamp"] = df_tags["timestamp"].astype(str)
+
+
 
 ############################################################################### Insert Data
 
@@ -129,10 +146,11 @@ def insert_data(tablenames):
  
     if "movielens" in tablenames: 
         for i, row in df_movielens.iterrows():
-            query = 'INSERT INTO movielens VALUES (?,?,?)'
+            query = 'INSERT INTO movielens VALUES (?,?,?,?)'
             db.execute(query, (row['movieId'], 
                                row["title"], 
-                               row["genres"]
+                               row["genres"],
+                               row["year"]
                                ))
 
     if "links" in tablenames: 
@@ -165,16 +183,17 @@ def insert_data(tablenames):
 ############################################################################### select what to do
 
 tablenames = ["omdb", "movielens", "tags", "links", "ratings"] 
-#create_tables(tablenames)
 #drop_table(tablenames)
-#insert_data(tablenames) 
+create_tables(tablenames)
+insert_data(tablenames) 
 
 
-query = '''SELECT * FROM links'''
-df_out = pd.read_sql(query, db)
-print(df_out.head(10))
+#query = '''SELECT timestamp FROM tags'''
+#df_out = pd.read_sql(query, db)
+#print(df_out.head(10))
 
+#print(df_tags["timestamp"].head(5))
 
-############################################################################### commit and clos
-#db.commit()
+############################################################################### commit and close
+db.commit()
 db.close()
