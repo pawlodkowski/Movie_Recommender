@@ -184,8 +184,8 @@ def insert_data(tablenames):
 
 tablenames = ["omdb", "movielens", "tags", "links", "ratings"] 
 #drop_table(tablenames)
-create_tables(tablenames)
-insert_data(tablenames) 
+#create_tables(tablenames)
+#insert_data(tablenames) 
 
 
 #query = '''SELECT timestamp FROM tags'''
@@ -195,5 +195,5 @@ insert_data(tablenames)
 #print(df_tags["timestamp"].head(5))
 
 ############################################################################### commit and close
-db.commit()
+#db.commit()
 db.close()
