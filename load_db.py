@@ -7,17 +7,15 @@ import sqlite3
 #PATH = "data/OMDB.csv"
 #df = pd.read_csv(PATH)
 
-df_omdb = pd.read_csv("data/omdb.csv")
-df_movielens = pd.read_csv("data/movies.csv")
-df_links = pd.read_csv("data/links.csv")
-df_ratings = pd.read_csv("data/ratings.csv")
-df_tags = pd.read_csv("data/tags.csv")
 
-# establish connection to database
+############################################################################### establish connection to database
+
 db = sqlite3.connect('data/movies.db')
 
 
-def create_db():
+############################################################################### Creating tables  
+    
+def create_table_omdb():
     DB_SETUP = """
     CREATE TABLE IF NOT EXISTS omdb (
         imdbid STRING(15),
@@ -32,50 +30,84 @@ def create_db():
         wrating FLOAT
     );
     CREATE UNIQUE INDEX IF NOT EXISTS i1 ON omdb(imdbid);
+    """
+    db.executescript(DB_SETUP)
     
-    
+
+def create_table_movielens():
+    DB_SETUP = """
     CREATE TABLE IF NOT EXISTS movielens (
         movieId STRING(15),
         title VARCHAR(250),
         genres TEXT
     );
-    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON movielens(movieId);
+    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON movielens(movieId);"""
+    db.executescript(DB_SETUP)
     
-    
-    CREATE TABLE IF NOT EXISTS links (
-        movieId STRING(15),
-        imdbId STRING(15),
-        tmdbId STRING(15)
-    );
-    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON links(movieId);   
-    
-    
+
+def create_table_ratings():
+    DB_SETUP = """
     CREATE TABLE IF NOT EXISTS ratings (
         userId STRING(15),
         movieId STRING(15),
         rating FLOAT,
         timestamp STRING(20)
     );
-    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON ratings(movieId);       
+    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON ratings(movieId); """  
+    db.executescript(DB_SETUP)
     
     
+def create_table_links():
+    DB_SETUP = """
+    CREATE TABLE IF NOT EXISTS links (
+        movieId STRING(15),
+        imdbId STRING(15),
+        tmdbId STRING(15)
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON links(movieId); """  
+    db.executescript(DB_SETUP)    
+
+
+def create_table_tags():
+    DB_SETUP = """
     CREATE TABLE IF NOT EXISTS tags (
         userId STRING(15),
         movieId STRING(15),
         tag TEXT,
         timestamp STRING(20)
     );
-    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON tags(movieId);     
-    """
-    db.executescript(DB_SETUP)
+    CREATE UNIQUE INDEX IF NOT EXISTS i1 ON tags(movieId);  """
+    db.executescript(DB_SETUP) 
 
 
-def drop_table(tablename):
-    DROP_TABLE = f"DROP TABLE {tablename};"
-    db.executescript(DROP_TABLE)
+def create_db():
+    create_table_omdb()
+    create_table_movielens()
+    create_table_ratings()
+    create_table_links()
+    create_table_tags()
+
+
+def drop_table(tablenames):
+    for i in tablenames:
+        DROP_TABLE = f"DROP TABLE {i};"
+        db.executescript(DROP_TABLE)
     #db.close()
-       
+
+############################################################################### Preparing Data For Insert
+# Load Data 
     
+df_omdb = pd.read_csv("data/omdb.csv")
+df_movielens = pd.read_csv("data/movies.csv")
+df_links = pd.read_csv("data/links.csv")
+df_ratings = pd.read_csv("data/ratings.csv")
+df_tags = pd.read_csv("data/tags.csv")
+
+# Reshape Data
+
+
+############################################################################### Insert Data
+
 def insert_data():
     for i, row in df_omdb.iterrows():
         query = 'INSERT INTO omdb VALUES (?,?,?,?,?,?,?,?,?,?)'
@@ -121,19 +153,22 @@ def insert_data():
                            ))
 
 
-########## select what should be done
+############################################################################### select what to do
+
+
 #create_db()
-#drop_table("movies")
+        
+tablenames = ["ombd", "movielens", "tags", "links", "ratings"]        
+#drop_table(tablenames)
+
 #insert_data() 
 
 
-query = '''SELECT tag, tags.movieId, movielens.title 
-        FROM tags 
-        INNER JOIN ratings on ratings.movieId = tags.movieId JOIN movielens on movielens.movieId = ratings.movieId 
-        WHERE ratings.rating > 4.0
-        '''
+query = '''SELECT * FROM movielens'''
 df_out = pd.read_sql(query, db)
 print(df_out.head(10))
 
+
+############################################################################### commit and clos
 #db.commit()
 db.close()
