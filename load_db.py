@@ -12,7 +12,6 @@ import sqlite3
 
 db = sqlite3.connect('data/movies.db')
 
-
 ############################################################################### Creating tables  
     
 def create_table_omdb():
@@ -83,13 +82,13 @@ def create_table_tags():
 def create_tables(tablenames):
     if "omdb" in tablenames:
         create_table_omdb()
-    elif "movielens" in tablenames:
+    if "movielens" in tablenames:
         create_table_movielens()
-    elif "ratings" in tablenames:
+    if "ratings" in tablenames:
         create_table_ratings()
-    elif "links" in tablenames:  
+    if "links" in tablenames:  
         create_table_links()
-    elif "tags" in tablenames: 
+    if "tags" in tablenames: 
         create_table_tags()
 
 
@@ -128,7 +127,7 @@ def insert_data(tablenames):
                                row["imdbVotes"], 
                                0.0)) # wrating needs numerical values for calculation, imdbVotes is still string
  
-    elif "movielens" in tablenames: 
+    if "movielens" in tablenames: 
         for i, row in df_movielens.iterrows():
             query = 'INSERT INTO movielens VALUES (?,?,?)'
             db.execute(query, (row['movieId'], 
@@ -136,7 +135,7 @@ def insert_data(tablenames):
                                row["genres"]
                                ))
 
-    elif "links" in tablenames: 
+    if "links" in tablenames: 
         for i, row in df_links.iterrows():
             query = 'INSERT INTO links VALUES (?,?,?)'
             db.execute(query, (row["movieId"], 
@@ -144,7 +143,7 @@ def insert_data(tablenames):
                                row["tmdbId"]
                                ))
 
-    elif "ratings" in tablenames: 
+    if "ratings" in tablenames: 
         for i, row in df_ratings.iterrows():
             query = 'INSERT INTO ratings VALUES (?,?,?,?)'
             db.execute(query, (row['userId'], 
@@ -153,7 +152,7 @@ def insert_data(tablenames):
                                row["timestamp"]                           
                                ))
 
-    elif "tags" in tablenames:  
+    if "tags" in tablenames:  
         for i, row in df_tags.iterrows():
             query = 'INSERT INTO tags VALUES (?,?,?,?)'
             db.execute(query, (row['userId'], 
@@ -165,14 +164,13 @@ def insert_data(tablenames):
 
 ############################################################################### select what to do
 
-tablenames = ["ombd", "movielens", "tags", "links", "ratings"] 
+tablenames = ["omdb", "movielens", "tags", "links", "ratings"] 
 #create_tables(tablenames)
 #drop_table(tablenames)
-
 #insert_data(tablenames) 
 
 
-query = '''SELECT * FROM movielens'''
+query = '''SELECT * FROM links'''
 df_out = pd.read_sql(query, db)
 print(df_out.head(10))
 
