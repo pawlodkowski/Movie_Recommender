@@ -1,4 +1,5 @@
 # Movie_Recommender
+**Contributors**:  Matthias Heerens, Helena Schock, Paul Wlodkowski
 Machine learning model for recommending movies.
 - In a web interface (powered by Django), the user rates 5 movies (on a scale from 1 to 5) that are randomly generated.
 - This user input is then fed into 2 unsupervised machine-learning models:
