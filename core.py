@@ -2,10 +2,8 @@ import sqlite3
 import pickle
 import pandas as pd
 import numpy as np
-from  more_itertools import unique_everseen
+from more_itertools import unique_everseen
 from sklearn.metrics.pairwise import cosine_similarity
-
-
 
 
 def get_data_from_db(database_directory, tablename):
@@ -53,11 +51,10 @@ def apply_NMF(trained_model, converted_user_input, filtered_movie_ids, all_movie
     results = pd.DataFrame(recommendations_with_movie_id_filtered, columns = ["movieId", "NMF_score"])
     results = results.sort_values(by = "NMF_score", ascending = False)
     output = list(results["movieId"])
-    
     return output
 
 
-def apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filtered_movie_ids ):
+def apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filtered_movie_ids):
     
     def make_cosine_heatmap(df):
         labels = list(df.index.values) 
@@ -95,14 +92,55 @@ def apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filter
         recommended_movie_ids = list(unique_everseen(recommended_movie_ids)) # delete duplicates from list keeping their order 
         if len(recommended_movie_ids) >= 20:
             break
-        
     return recommended_movie_ids
 
 
-def merge_recommendations():
+def convert_filters(filters):
+    #takes a list of filter strings and return list of movie ids matching filter criteria
+    return filtered_moviedids
+
+
+def convert_input():
+    # takes tuples from django website and turns them into readable input for NMF etc.
+    return converted_input
+
+
+def make_final_recommendations(recoms_NMF, recoms_CF):
+    # create function that merges the results of NMF and collaborative filtering
+    return final_recommendations
     
 
-database_directory = "data/movies.db"
-NMF_model_directory = "data/trained_NMF_model.sav"
-d0 = get_data_from_db(database_directory, "ratings")
+def convert_to_imdbid(movieids):
+    # converts list of movieids into list of imdb ids
+    return imdbids
+
+
+def make_poster_links(imdbids):
+    # return a list of posterlinks according to the imdbids
+    return poster_links
+    
+    
+def recommender(website_user_ratings, website_filters):
+    
+    database_directory = "data/movies.db"
+    NMF_model_directory = "data/trained_NMF_model.sav"
+    #d0 = get_data_from_db(database_directory, "ratings")
+
+    users_vs_movies_matrix = create_users_vs_movies_matrix(d0)
+    
+    filtered_movie_ids = convert_filters(website_filters)
+    converted_user_input = convert_input(website_user_ratings)
+    all_movie_ids = get_all_movie_ids(database_directory, tablename = "ratings")
+    trained_model = load_NMF_model(NMF_model_directory)
+    n_models = 10
+    
+    NMF_results = apply_NMF(trained_model, converted_user_input, filtered_movie_ids, all_movie_ids, n_results)
+    CF_results = apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filtered_movie_ids)
+    
+    final_recommendations = make_final_recommendations(NMF_results, CF_results)
+    
+    # map to imbdid
+    # make poster links
+    
+    return final_recommendations
 
