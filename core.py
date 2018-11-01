@@ -1,7 +1,13 @@
 ###############################################################################
-''' Movie recommender 3000
-'''
+''' 
+Spicy Movie Recommender 5000
 
+
+# todo
+# apply superior filtering algorithm
+# magic merger returns duplicates sometimes...
+# prepare data for sending it to the website --> convert to IMDB Ids
+'''
 ############################################################################### Imports
 
 import sqlite3
@@ -10,8 +16,6 @@ import pandas as pd
 import numpy as np
 from more_itertools import unique_everseen
 from sklearn.metrics.pairwise import cosine_similarity
-
-
 
 ############################################################################### Functions
 
@@ -94,7 +98,7 @@ def apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filter
     # go through every similar user, starting from most similar one, check for conditions below and append movieId to list
     recommended_movie_ids = []
     for user in similar_users:
-        checking_movies = ((filtered_uvmm_complemented.loc[0] == 0.0) & (filtered_uvmm_complemented.loc[user] >= 5.0))
+        checking_movies = ((filtered_uvmm_complemented.loc[0] == 0.0) & (filtered_uvmm_complemented.loc[user] == 5.0))
         d = dict(checking_movies)
         recommended_movie_ids_from_user = list(filter(d.get, d)) #returning keys (movieids) from dict where value is True
         recommended_movie_ids += recommended_movie_ids_from_user
@@ -104,9 +108,59 @@ def apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filter
     return recommended_movie_ids
 
 
-#def convert_filters(filters):
-    #takes a list of filter strings and return list of movie ids matching filter criteria
-#    return filtered_moviedids
+def movieIds_by_genre(desired_genre, database_directory):
+
+    db = sqlite3.connect(database_directory)
+    query = '''SELECT title, genres, ratings.*, tags.tag, tags.timestamp AS ts
+           FROM movielens
+           JOIN ratings ON movielens.movieId = ratings.movieId
+           LEFT JOIN tags ON movielens.movieID = tags.movieID AND ratings.userId = tags.userId'''
+    
+    dataframe = pd.read_sql(query, db)
+    db.close()
+    
+    
+    genres = list(dataframe['genres'].unique())
+
+    genres_split = []
+    for g in genres:
+        sublist = g.split('|')
+        genres_split.append(sublist)
+
+    flat_list = [item for sublist in genres_split for item in sublist]
+
+    def unique_list(list):
+        a = []
+        for b in list:
+            if b not in a:
+                a.append(b)
+        return a
+
+    unique_genres = unique_list(flat_list)
+
+    for g in unique_genres:
+
+        col_to_add = []
+        for i in list(dataframe['genres']):
+            if g in i:
+                col_to_add.append(1)
+            else:
+                col_to_add.append(0)
+
+        dataframe['Genre_{}'.format(g)] = col_to_add
+
+#     del dataframe['genres']
+#     #optional
+
+    ids = dataframe['movieId']
+    bools = dataframe['Genre_{}'.format(desired_genre)].values
+    z = list(zip(ids, bools))
+    list_movies = []
+    for pair in z:
+        if pair[1] == 1:
+            list_movies.append(pair[0])
+
+    return unique_list(list_movies)
 
 
 def translator_dictionary(database_directory):
@@ -142,8 +196,10 @@ def convert_django(dataframe, django_data, database_directory):
 
     return list(combined.loc[0])
 
-def convert_ids_to_titles(id_list):
 
+def convert_ids_to_titles(id_list,database_directory):
+    
+    db = sqlite3.connect(database_directory)
     query = "SELECT movieId, title FROM movielens"
     df_translator = pd.read_sql(query, db)
     movie_IDs = list(df_translator['movieId'])
@@ -154,13 +210,23 @@ def convert_ids_to_titles(id_list):
     titles = []
     for i in id_list:
         titles.append(id_2_title[i])
-
+    
+    db.close()
     return titles
 
 
-#def make_final_recommendations(recoms_NMF, recoms_CF):
+def magic_merging(NMF, CF):
     # create function that merges the results of NMF and collaborative filtering
-#    return final_recommendations
+    if len(CF) > 20:
+        NMF_reduced = NMF[:len(CF)]
+        overlap = [x for i,x in enumerate(NMF_reduced) if NMF_reduced[i] in CF]
+        if len(overlap) < 10:
+            result = NMF[:5]+CF[:5]
+        else:
+            result = overlap[:10]
+    else:
+        result = NMF[:10]
+    return result
 
 
 #def convert_to_imdbid(movieids):
@@ -181,30 +247,31 @@ def recommender(website_user_ratings, website_filters):
     database_directory = "data/movies.db"
     NMF_model_directory = "data/NMF_model_trained.sav"
 
-
     d0 = get_data_from_db(database_directory, "ratings")
     users_vs_movies_matrix = create_users_vs_movies_matrix(d0)
 
     converted_user_input = convert_django(users_vs_movies_matrix, website_user_ratings, database_directory)
-    #filtered_movie_ids = convert_filters(website_filters)
+    filtered_movie_ids = movieIds_by_genre(website_filters, database_directory)
 
     all_movie_ids = get_all_movie_ids(database_directory, tablename = "ratings")
     trained_model = load_NMF_model(NMF_model_directory)
-
-    filtered_movie_ids = all_movie_ids # for now
+    
+    #filtered_movie_ids = all_movie_ids
 
     NMF_results = apply_NMF(trained_model, converted_user_input, filtered_movie_ids, all_movie_ids)
     CF_results = apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filtered_movie_ids)
 
-    #final_recommendations = make_final_recommendations(NMF_results, CF_results)
-
+    #magic_recoms = magic_merging(NMF_results, CF_results)
+    magic_recoms = CF_results
+    
+    recommended_movie_titles = convert_ids_to_titles(magic_recoms,database_directory)
     # map to imbdid
     # make poster links
 
-    return len(NMF_results) , len(CF_results)
+    return recommended_movie_titles[:10]
     #return len(converted_user_input)
 
-website_user_ratings = [(112572, 4.0), (113690, 5.0), (111003, 1.0), (33467, 3.0), (88763, 3.0)]
-website_filters = ["Action"]
+website_user_ratings = [(92991, 5.0), (82010, 5.0), (56869, 5.0), (50147, 5.0), (81505, 5.0)]
+website_filters = "Adventure"
 
 print(recommender(website_user_ratings, website_filters))

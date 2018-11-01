@@ -5,7 +5,7 @@ import pickle
 
 database_directory = "data/movies.db"
 tablename = "ratings"
-n_components = 10
+n_components = 15
 filename = "data/NMF_model_trained.sav"
 
 
@@ -20,7 +20,7 @@ def create_users_vs_movies_matrix(df):
     df = df.drop("timestamp", axis = 1)
     df = df.set_index(["userId", "movieId"])
     df = df.unstack()
-    df = df.fillna(0)
+    df = df.fillna(0) # default value
     return df
 
 d0 = get_data_from_db(database_directory, tablename)
