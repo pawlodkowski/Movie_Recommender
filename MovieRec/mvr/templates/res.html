@@ -1,0 +1,49 @@
+<!-- mvr/templates/res.html -->
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            <!-- css !-->
+            * {
+                box-sizing: border-box;
+              }
+
+            .column {
+                float: left;
+                width: 18%;
+                padding: 5px;
+            }
+
+            /* Clearfix (clear floats) */
+            .row::after {
+                content: "";
+                clear: both;
+                display: table;
+            }
+
+            <meta charset="utf-8">
+            <title>Movie Recommender</title>
+        </style>
+    </head>
+    <body>
+        <h1>Your recommendations are:</h1>
+        {{test}}
+        
+        <!-- for Schleife !-->       
+        <div class="row">
+          {% for r in rurl %}
+          <div class="column">
+            <img src={{r}} alt="Snow" style="width:100%">
+          </div>
+          {% endfor %} 
+        </div>
+        
+        <form action="/main/" method="POST">
+            {% csrf_token %}
+            <p>
+                <button type="submit">Another round</button> 
+            </p>
+         </form>
+
+     </body>
+</html>

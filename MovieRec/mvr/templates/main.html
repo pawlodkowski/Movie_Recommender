@@ -1,0 +1,69 @@
+<!-- mvr/templates/main.html -->
+<!DOCTYPE html>
+<html>
+    <head>
+    <style>
+    * {
+        box-sizing: border-box;
+    }
+
+    .column {
+        float: left;
+        width: 20%;
+        padding: 5px;
+    }
+
+    /* Clearfix (clear floats) */
+    .row::after {
+        content: "";
+        clear: both;
+        display: table;
+    }
+    .slidecontainer {
+        width: 100%;
+        padding: 5px;
+    }
+
+    .slider {
+        width: 18.2%;
+        height: 25px;
+        transition: opacity .2s;
+    }
+    </style>
+        <meta charset="utf-8">
+        <title>Movie Recommender</title>
+    </head>
+    <body>
+        <h1>Please provide a rating for the movies below</h1>
+        
+        <!-- for Schleife !-->       
+        <div class="row">
+          {% for m in murl %}
+          <div class="column">
+            <img src={{m}} alt="Snow" style="width:100%">
+          </div>
+          {% endfor %} 
+        </div>
+          
+         
+         <form action="/action/" method="POST">
+             <!-- hier kommen Slider, Textbox & Buttons rein !-->
+             {% csrf_token %}
+             <div class="slidecontainer">
+                 {% for a in allm %}
+                  <input type="range" min="1" max="5" value="3" class="slider" id="myRange" name={{a}} class="slider">
+                 {% endfor %} 
+             </div>
+             <br>
+             Please enter any keywords you would like your recommendations to consider (optional):
+             <br>
+             <input type="text" name="kws" style="font-size:10pt;height:25px;width:350px;">
+             <p>
+             <button type="submit">Ready</button> 
+             </p>
+         </form>
+
+
+
+     </body>
+</html>
