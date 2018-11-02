@@ -334,7 +334,8 @@ def recommender(website_user_ratings, website_filters):
     #magic_recoms = magic_merging(NMF_results, CF_results)
     magic_recoms = NMF_results
     
-    recommended_movie_titles = convert_ids_to_titles(magic_recoms,database_directory)
+    #recommended_movie_titles = convert_ids_to_titles(magic_recoms,database_directory)
+    recommended_movie_titles = back_2_IMDB(magic_recoms, database_directory)
     # map to imbdid
     # make poster links
 
