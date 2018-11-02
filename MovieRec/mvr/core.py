@@ -119,6 +119,10 @@ def apply_filtering(website_filters, database_directory):
     
     # make searchable extract: keywords vs movieIds
     # load data
+    d0 = get_data_from_db(database_directory, "mvr_ratings")###################new
+    all_rated_movie_ids = sorted(set(d0["movieId"]))###########################new
+    d0r = pd.DataFrame(all_rated_movie_ids, columns = ["movieId"])#############new    
+    
     dm = get_data_from_db(database_directory, "mvr_movielens")
     dt = get_data_from_db(database_directory, "mvr_tags")
     # make genres to a string
@@ -127,6 +131,8 @@ def apply_filtering(website_filters, database_directory):
     dt = dt.groupby(["movieId"])['tag'].apply(lambda x: ','.join(x)).reset_index()
     dt["tag"] = dt["tag"].apply(splitter2)
     # merge combined tags on dm
+    df1 = pd.merge(d0r, dm, how="left", on = "movieId")########################new
+    df = pd.merge(df1, dt, how = "left", on = "movieId")#######################new    
     df = pd.merge(dm, dt, how = "left", on = "movieId")
     df["tag"].fillna(value = "", inplace = True)
     # keyword column
