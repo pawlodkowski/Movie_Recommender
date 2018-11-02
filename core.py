@@ -27,7 +27,7 @@ def get_data_from_db(database_directory, tablename):
     return df
 
 
-def get_all_movie_ids(database_directory, tablename = "ratings"):
+def get_all_movie_ids(database_directory, tablename = "mvr_ratings"):
     d0 = get_data_from_db(database_directory, tablename)
     all_movie_ids = sorted(set(d0["movieId"]))
     return all_movie_ids
@@ -35,6 +35,7 @@ def get_all_movie_ids(database_directory, tablename = "ratings"):
 
 def create_users_vs_movies_matrix(df):
     df = df.drop("timestamp", axis = 1)
+    df = df.drop("id", axis = 1)
     df = df.set_index(["userId", "movieId"])
     df = df.unstack()
     df = df.fillna(0)
@@ -107,7 +108,7 @@ def apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filter
             break
     return recommended_movie_ids
 
-def apply_filtering(website_filters, database_directory):
+def apply_filtering(website_filters, database_directory, all_rated_movies):
     
     def splitter1(x):
         return ",".join(x.split("|")).lower()
@@ -118,15 +119,21 @@ def apply_filtering(website_filters, database_directory):
     
     # make searchable extract: keywords vs movieIds
     # load data
-    dm = get_data_from_db(database_directory, "movielens")
-    dt = get_data_from_db(database_directory, "tags")
+    d0 = get_data_from_db(database_directory, "mvr_ratings")###################new
+    all_rated_movie_ids = sorted(set(d0["movieId"]))###########################new
+    d0r = pd.DataFrame(all_rated_movie_ids, columns = ["movieId"])#############new
+    
+    dm = get_data_from_db(database_directory, "mvr_movielens")
+    dt = get_data_from_db(database_directory, "mvr_tags")
     # make genres to a string
     dm["genres"] = dm["genres"].apply(splitter1)
     # group tags per movieid and make string out of it
     dt = dt.groupby(["movieId"])['tag'].apply(lambda x: ','.join(x)).reset_index()
     dt["tag"] = dt["tag"].apply(splitter2)
+    
     # merge combined tags on dm
-    df = pd.merge(dm, dt, how = "left", on = "movieId")
+    df1 = pd.merge(d0r, dm, how="left", on = "movieId")########################new
+    df = pd.merge(df1, dt, how = "left", on = "movieId")#######################new
     df["tag"].fillna(value = "", inplace = True)
     # keyword column
     df["keywords"] = df["genres"] + df["tag"]  + df["title"]
@@ -163,10 +170,10 @@ def apply_filtering(website_filters, database_directory):
 def movieIds_by_genre(desired_genre, database_directory):
 
     db = sqlite3.connect(database_directory)
-    query = '''SELECT title, genres, ratings.*, tags.tag, tags.timestamp AS ts
-           FROM movielens
-           JOIN ratings ON movielens.movieId = ratings.movieId
-           LEFT JOIN tags ON movielens.movieID = tags.movieID AND ratings.userId = tags.userId'''
+    query = '''SELECT title, genres, mvr_ratings.*, mvr_tags.tag, mvr_tags.timestamp AS ts
+           FROM mvr_movielens
+           JOIN mvr_ratings ON mvr_movielens.movieId = mvr_ratings.movieId
+           LEFT JOIN mvr_tags ON mvr_movielens.movieID = mvr_tags.movieID AND mvr_ratings.userId = mvr_tags.userId'''
     
     dataframe = pd.read_sql(query, db)
     db.close()
@@ -218,7 +225,7 @@ def movieIds_by_genre(desired_genre, database_directory):
 def translator_dictionary(database_directory):
 
     db = sqlite3.connect(database_directory)
-    query = "SELECT movieId, imdbId FROM links"
+    query = "SELECT movieId, imdbId FROM mvr_links"
     df_translator = pd.read_sql(query, db)
     movie_IDs = list(df_translator['movieId'])
     IMDB_IDs = list(df_translator['imdbId'])
@@ -247,12 +254,13 @@ def convert_django(dataframe, django_data, database_directory):
         #where 0 represents userId = 0, aka the new user
 
     return list(combined.loc[0])
+    #return new_user_row
 
 
 def convert_ids_to_titles(id_list,database_directory):
     
     db = sqlite3.connect(database_directory)
-    query = "SELECT movieId, title FROM movielens"
+    query = "SELECT movieId, title FROM mvr_movielens"
     df_translator = pd.read_sql(query, db)
     movie_IDs = list(df_translator['movieId'])
     titles = list(df_translator['title'])
@@ -269,7 +277,7 @@ def convert_ids_to_titles(id_list,database_directory):
 def back_2_IMDB(id_list, database_directory):
     
     db = sqlite3.connect(database_directory)
-    query = "SELECT movieId, imdbId FROM links"
+    query = "SELECT movieId, imdbId FROM mvr_links"
     df_translator = pd.read_sql(query, db)
     movie_IDs = list(df_translator['movieId'])
     IMDB_IDs = list(df_translator['imdbId'])
@@ -313,17 +321,17 @@ def magic_merging(NMF, CF):
 
 def recommender(website_user_ratings, website_filters):
 
-    database_directory = "data/movies.db"
+    database_directory = "data/movies.sqlite3"
     NMF_model_directory = "data/NMF_model_trained.sav"
 
-    d0 = get_data_from_db(database_directory, "ratings")
+    d0 = get_data_from_db(database_directory, "mvr_ratings")
     users_vs_movies_matrix = create_users_vs_movies_matrix(d0)
 
     converted_user_input = convert_django(users_vs_movies_matrix, website_user_ratings, database_directory)
-    #filtered_movie_ids = movieIds_by_genre(website_filters, database_directory)
-    filtered_movie_ids = apply_filtering(website_filters, database_directory)
+    all_movie_ids = get_all_movie_ids(database_directory, tablename = "mvr_ratings")
+    filtered_movie_ids = apply_filtering(website_filters, database_directory, all_movie_ids)
 
-    all_movie_ids = get_all_movie_ids(database_directory, tablename = "ratings")
+
     trained_model = load_NMF_model(NMF_model_directory)
     
     #filtered_movie_ids = all_movie_ids
@@ -331,18 +339,21 @@ def recommender(website_user_ratings, website_filters):
     NMF_results = apply_NMF(trained_model, converted_user_input, filtered_movie_ids, all_movie_ids)
     #CF_results = apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filtered_movie_ids)
 
-    #magic_recoms = magic_merging(NMF_results, CF_results)
+
     magic_recoms = NMF_results
     
-    #recommended_movie_titles = convert_ids_to_titles(magic_recoms,database_directory)
+    recommended_movie_titles = convert_ids_to_titles(magic_recoms,database_directory)
     recommended_movie_titles = back_2_IMDB(magic_recoms, database_directory)
-    # map to imbdid
-    # make poster links
+
 
     return recommended_movie_titles[:10]
-    #return len(converted_user_input)
+    #return  filtered_movie_ids
 
-website_user_ratings = [(92991, 5.0), (82010, 5.0), (56869, 5.0), (50147, 5.0), (81505, 5.0)]
-website_filters = "201, fantasy  horror  "
+website_user_ratings = [("0092991", 5.0), ("0082010", 5.0), ("0056869", 5.0), ("0050147", 5.0), ("0081505", 5.0)]
+website_filters = "horror"
 
-print(recommender(website_user_ratings, website_filters))
+test = recommender(website_user_ratings, website_filters)
+
+print(test)
+
+#print(d0)
