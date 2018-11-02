@@ -45,15 +45,17 @@ def recm(request):
     #test = list(zip(all_ids[-5:], resl))
     
     rurl = []
+    z = 1
     for i in test:
-        imdb = str('tt' + i[0])
-        rurl.append(getjpg(imdb)) #links
+        if z < 6:
+            imdb = str('tt' + i)
+            rurl.append(getjpg(imdb)) #links
+        z += 1
         
     
     return render(request, "res.html",
-                  context={'rurl': rurl,
-                           'keyws': keyws
+                  context={'rurl': rurl
                           }
                   )
-    
+ 
 
