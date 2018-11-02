@@ -107,6 +107,54 @@ def apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filter
             break
     return recommended_movie_ids
 
+def apply_filtering(website_filters, database_directory):
+    
+    def splitter1(x):
+        return ",".join(x.split("|")).lower()
+    def splitter2(x):
+        return ",".join(x.split(",")).lower()
+    def splitter3(x):
+        return x.split(",")
+    
+    # make searchable extract: keywords vs movieIds
+    # load data
+    dm = get_data_from_db(database_directory, "movielens")
+    dt = get_data_from_db(database_directory, "tags")
+    # make genres to a string
+    dm["genres"] = dm["genres"].apply(splitter1)
+    # group tags per movieid and make string out of it
+    dt = dt.groupby(["movieId"])['tag'].apply(lambda x: ','.join(x)).reset_index()
+    dt["tag"] = dt["tag"].apply(splitter2)
+    # merge combined tags on dm
+    df = pd.merge(dm, dt, how = "left", on = "movieId")
+    df["tag"].fillna(value = "", inplace = True)
+    # keyword column
+    df["keywords"] = df["genres"] + df["tag"]  + df["title"]
+    # make extact for searching
+    keywords = list(df["keywords"])
+    movieIds = list(df["movieId"])
+    keywords_and_movieids = list(zip(keywords, movieIds))
+    
+    #get results
+    filters = website_filters.lower().replace(",", " ").split(" ")
+    
+    filtered_ids = []
+    for i, movie in enumerate(keywords_and_movieids):
+        found = []
+        for keyword in filters:
+            if keyword.lower() in keywords_and_movieids[i][0]:
+                found.append(True)
+            else:
+                found.append(False)
+        if all(found):
+            filtered_ids.append(keywords_and_movieids[i][1])
+        else:
+            continue
+    filtered_ids = sorted(list(set(filtered_ids)))
+    
+    return filtered_ids
+        
+    
 
 def movieIds_by_genre(desired_genre, database_directory):
 
@@ -268,7 +316,8 @@ def recommender(website_user_ratings, website_filters):
     users_vs_movies_matrix = create_users_vs_movies_matrix(d0)
 
     converted_user_input = convert_django(users_vs_movies_matrix, website_user_ratings, database_directory)
-    filtered_movie_ids = movieIds_by_genre(website_filters, database_directory)
+    #filtered_movie_ids = movieIds_by_genre(website_filters, database_directory)
+    filtered_movie_ids = apply_filtering(website_filters, database_directory)
 
     all_movie_ids = get_all_movie_ids(database_directory, tablename = "ratings")
     trained_model = load_NMF_model(NMF_model_directory)
@@ -276,10 +325,10 @@ def recommender(website_user_ratings, website_filters):
     #filtered_movie_ids = all_movie_ids
 
     NMF_results = apply_NMF(trained_model, converted_user_input, filtered_movie_ids, all_movie_ids)
-    CF_results = apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filtered_movie_ids)
+    #CF_results = apply_CF(converted_user_input, all_movie_ids, users_vs_movies_matrix, filtered_movie_ids)
 
     #magic_recoms = magic_merging(NMF_results, CF_results)
-    magic_recoms = CF_results
+    magic_recoms = NMF_results
     
     recommended_movie_titles = convert_ids_to_titles(magic_recoms,database_directory)
     # map to imbdid
@@ -289,6 +338,6 @@ def recommender(website_user_ratings, website_filters):
     #return len(converted_user_input)
 
 website_user_ratings = [(92991, 5.0), (82010, 5.0), (56869, 5.0), (50147, 5.0), (81505, 5.0)]
-website_filters = "Adventure"
+website_filters = "201, fantasy horror"
 
 print(recommender(website_user_ratings, website_filters))
