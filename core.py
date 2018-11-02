@@ -214,6 +214,23 @@ def convert_ids_to_titles(id_list,database_directory):
     db.close()
     return titles
 
+def back_2_IMDB(id_list, database_directory):
+    
+    db = sqlite3.connect(database_directory)
+    query = "SELECT movieId, imdbId FROM links"
+    df_translator = pd.read_sql(query, db)
+    movie_IDs = list(df_translator['movieId'])
+    IMDB_IDs = list(df_translator['imdbId'])
+    
+    ML_2_IMDB = dict(zip(movie_IDs, IMDB_IDs))
+    
+    converted_ids = []
+    for i in id_list:
+        converted_ids.append(ML_2_IMDB[i])
+    
+    db.close()
+    
+    return converted_ids
 
 def magic_merging(NMF, CF):
     # create function that merges the results of NMF and collaborative filtering
