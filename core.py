@@ -138,6 +138,10 @@ def apply_filtering(website_filters, database_directory):
     #get results
     filters = website_filters.lower().replace(",", " ").split(" ")
     
+    raw = website_filters.lower().replace(",", " ").strip().split(" ")
+    while '' in raw:
+        raw.remove('')
+    
     filtered_ids = []
     for i, movie in enumerate(keywords_and_movieids):
         found = []
@@ -321,6 +325,6 @@ def recommender(website_user_ratings, website_filters):
     #return len(converted_user_input)
 
 website_user_ratings = [(92991, 5.0), (82010, 5.0), (56869, 5.0), (50147, 5.0), (81505, 5.0)]
-website_filters = "201, fantasy horror"
+website_filters = "201, fantasy  horror  "
 
 print(recommender(website_user_ratings, website_filters))
