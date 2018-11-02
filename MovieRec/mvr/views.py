@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 # Create your views here.
 #import recommender
-#from .mvr import recommender
+from .core import recommender
 from .models import Links #meine Tabelle
 import requests
 import random
@@ -41,8 +41,8 @@ def recm(request):
     for k in all_ids[-5:]:
         resl.append(request.POST[k])  
         
-    #test = recommender(list(zip(all_ids[-5:], resl)), keyws)
-    test = list(zip(all_ids[-5:], resl))
+    test = recommender(list(zip(all_ids[-5:], resl)), keyws)
+    #test = list(zip(all_ids[-5:], resl))
     
     rurl = []
     for i in test:
