@@ -322,9 +322,9 @@ def recommender(website_user_ratings, website_filters):
 
     #database_directory = "data/movies.db"
     #database_directory = "../movies.sqlite3"
-    database_directory = "C:/Users/Lena/Desktop/DataScience/Goals/Movie_Recommender/MovieRec/movies.sqlite3"
+    database_directory = "../movies.sqlite3"
     #NMF_model_directory = "data/NMF_model_trained.sav"
-    NMF_model_directory = "C:/Users/Lena/Desktop/DataScience/Goals/Movie_Recommender/data/NMF_model_trained.sav"
+    NMF_model_directory = "../../data/NMF_model_trained.sav"
 
     d0 = get_data_from_db(database_directory, "mvr_ratings")
     users_vs_movies_matrix = create_users_vs_movies_matrix(d0)
