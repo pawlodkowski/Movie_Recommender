@@ -16,6 +16,7 @@ import pandas as pd
 import numpy as np
 from more_itertools import unique_everseen
 from sklearn.metrics.pairwise import cosine_similarity
+import os
 
 ############################################################################### Functions
 
@@ -133,7 +134,7 @@ def apply_filtering(website_filters, database_directory):
     # merge combined tags on dm
     df1 = pd.merge(d0r, dm, how="left", on = "movieId")########################new
     df = pd.merge(df1, dt, how = "left", on = "movieId")#######################new    
-    df = pd.merge(dm, dt, how = "left", on = "movieId")
+
     df["tag"].fillna(value = "", inplace = True)
     # keyword column
     df["keywords"] = df["genres"] + df["tag"]  + df["title"]
@@ -320,11 +321,13 @@ def magic_merging(NMF, CF):
 
 def recommender(website_user_ratings, website_filters):
 
+    PFAD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
     #database_directory = "data/movies.db"
     #database_directory = "../movies.sqlite3"
-    database_directory = "../movies.sqlite3"
+    database_directory = PFAD + "\movies.sqlite3"
     #NMF_model_directory = "data/NMF_model_trained.sav"
-    NMF_model_directory = "../../data/NMF_model_trained.sav"
+    NMF_model_directory = PFAD + "\\NMF_model_trained.sav"
 
     d0 = get_data_from_db(database_directory, "mvr_ratings")
     users_vs_movies_matrix = create_users_vs_movies_matrix(d0)
@@ -354,9 +357,11 @@ def recommender(website_user_ratings, website_filters):
     return recommended_movie_titles[:10]
     #return len(converted_user_input)
 
-#website_user_ratings = [('0092991', 5.0)]
-#website_filters = "hanks"
-
-#print(recommender(website_user_ratings, website_filters))
+#PFAD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+website_user_ratings = [('0092991', 5.0)]
+website_filters = "horror"
+#settings.configure()
+#print(PFAD + "\\NMF_model_trained.sav")
+print(recommender(website_user_ratings, website_filters))
 #test = (recommender(website_user_ratings, website_filters))
 #test
